@@ -269,7 +269,7 @@ else:
         d_o = df[df['Ticket_Status'] == 'Open']
         if not d_o.empty:
             d_o['Age_B'] = pd.cut(d_o['Pipeline_Latency_Minutes'], bins=[0,30,60,120,np.inf], labels=['Under 30m','30-60m','1-2 Hours','2h+'])
-d_o.pivot_table(index='SABRE_PCC', columns='Age_B', values='SABRE_PNR', aggfunc='count').fillna(0).astype(int).plot(kind='bar', stacked=True, cmap='Reds', ax=ax)
+            d_o.pivot_table(index='SABRE_PCC', columns='Age_B', values='SABRE_PNR', aggfunc='count').fillna(0).astype(int).plot(kind='bar', stacked=True, cmap='Reds', ax=ax)
             plt.legend(title='Age')
         ax.set_title('▼ ACTIVE SLA BACKLOG AGING BUCKETS BY OFFICE', fontsize=11, fontweight='bold')
         st.pyplot(fig)
