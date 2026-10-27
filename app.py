@@ -203,21 +203,8 @@ with rowB_col1: Target_Status_Filter = st.selectbox("Pipeline Ticket Status:", [
 with rowB_col2: Start_Date = st.date_input("Filter Window Start Date:", pd.to_datetime("2026-10-01").date())
 with rowB_col3: End_Date = st.date_input("Filter Window End Date:", pd.to_datetime("2026-10-31").date())
 
-# Slice the live data frame based on selected visual widget options
+# Copy the master data frame natively to prepare for parsing operations
 df = st.session_state.master_df.copy()
-if Target_Office_Filter != "ALL": df = df[df['SABRE_PCC'] == Target_Office_Filter]
-if Target_Airline_Filter != "ALL": df = df[df['Airline_Carrier'] == Target_Airline_Filter]
-if Target_Error_Type_Filter != "ALL": df = df[df['Error_Category'] == Target_Error_Type_Filter]
-if Target_Status_Filter != "ALL": df = df[df['Ticket_Status'] == Target_Status_Filter]
-df = df[(df['Just_Date'] >= Start_Date) & (df['Just_Date'] <= End_Date)]
-
-
-# Slice the live data frame based on selected visual widget options
-df = st.session_state.master_df.copy()
-if Target_Office_Filter != "ALL": df = df[df['SABRE_PCC'] == Target_Office_Filter]
-if Target_Status_Filter != "ALL": df = df[df['Ticket_Status'] == Target_Status_Filter]
-df = df[(df['Just_Date'] >= Start_Date) & (df['Just_Date'] <= End_Date)]
-
 
 # ==============================================================================
 # SECTION 8: AUTOMATED SYSTEM CLASSIFICATION CATEGORIES
@@ -233,6 +220,15 @@ def classify_topic(text):
     if 'cancel' in s or 'cancelled' in s: return 'Flight Cancel Mismatch'
     return 'Other Queue Exceptions'
 df['Error_Category'] = df['Email_Subject'].apply(classify_topic)
+
+# ─── THE SAFELY SEQUENCED DATA SLICING FILTERS ───
+# Run user filters here since columns are now fully compiled and visible to the database engine!
+if Target_Office_Filter != "ALL": df = df[df['SABRE_PCC'] == Target_Office_Filter]
+if Target_Airline_Filter != "ALL": df = df[df['Airline_Carrier'] == Target_Airline_Filter]
+if Target_Error_Type_Filter != "ALL": df = df[df['Error_Category'] == Target_Error_Type_Filter]
+if Target_Status_Filter != "ALL": df = df[df['Ticket_Status'] == Target_Status_Filter]
+df = df[(df['Just_Date'] >= Start_Date) & (df['Just_Date'] <= End_Date)]
+
 
 
 # ==============================================================================
