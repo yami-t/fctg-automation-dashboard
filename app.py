@@ -187,15 +187,30 @@ if st.sidebar.button("🚀 Inject Incident Payload"):
 
 # ==============================================================================
 # SECTION 7: INTERACTIVE GLOBAL DATA SLICER CONTROLS
-# Defines responsive web drop-downs and calendar pickers spanning your layout.
+# Defines a dual-row, 3-column interactive layout to house all 6 operational slicers.
 # ==============================================================================
 st.markdown("### 🎛️ Global Ingestion Filtering Slicers")
-c1, c2, c3, c4 = st.columns(4)
 
-with c1: Target_Office_Filter = st.selectbox("Office Location Code (PCC):", ["ALL"] + list(st.session_state.master_df['SABRE_PCC'].unique()))
-with c2: Target_Status_Filter = st.selectbox("Pipeline Ticket Status:", ["ALL", "Open", "Resolved"])
-with c3: Start_Date = st.date_input("Filter Window Start Date:", pd.to_datetime("2026-10-01").date())
-with c4: End_Date = st.date_input("Filter Window End Date:", pd.to_datetime("2026-10-31").date())
+# Row A: Office, Airline, and Error Type Dropdowns
+rowA_col1, row1_col2, row1_col3 = st.columns(3)
+with rowA_col1: Target_Office_Filter = st.selectbox("Office Location Code (PCC):", ["ALL"] + list(st.session_state.master_df['SABRE_PCC'].unique()))
+with row1_col2: Target_Airline_Filter = st.selectbox("Airline Carrier Filter:", ["ALL", "UX", "BA", "VA", "AI", "AC", "UA", "DL", "OTHER / MULTI"])
+with row1_col3: Target_Error_Type_Filter = st.selectbox("System Error Category Type:", ["ALL", "Payment / CC Decline", "Waiver Discrepancy", "Fare / Pricing Error", "Flight Cancel Mismatch", "Other Queue Exceptions"])
+
+# Row B: Status, Start Date, and End Date Elements
+rowB_col1, rowB_col2, rowB_col3 = st.columns(3)
+with rowB_col1: Target_Status_Filter = st.selectbox("Pipeline Ticket Status:", ["ALL", "Open", "Resolved"])
+with rowB_col2: Start_Date = st.date_input("Filter Window Start Date:", pd.to_datetime("2026-10-01").date())
+with rowB_col3: End_Date = st.date_input("Filter Window End Date:", pd.to_datetime("2026-10-31").date())
+
+# Slice the live data frame based on selected visual widget options
+df = st.session_state.master_df.copy()
+if Target_Office_Filter != "ALL": df = df[df['SABRE_PCC'] == Target_Office_Filter]
+if Target_Airline_Filter != "ALL": df = df[df['Airline_Carrier'] == Target_Airline_Filter]
+if Target_Error_Type_Filter != "ALL": df = df[df['Error_Category'] == Target_Error_Type_Filter]
+if Target_Status_Filter != "ALL": df = df[df['Ticket_Status'] == Target_Status_Filter]
+df = df[(df['Just_Date'] >= Start_Date) & (df['Just_Date'] <= End_Date)]
+
 
 # Slice the live data frame based on selected visual widget options
 df = st.session_state.master_df.copy()
