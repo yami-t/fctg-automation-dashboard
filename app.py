@@ -276,14 +276,19 @@ else:
 
     # ─── ROW 3: BACKLOG SLA AGING & BURNDOWN SPEEDS ───
     with row3_col1:
-        fig, ax = plt.subplots(figsize=(8, 4.5))
         d_o = df[df['Ticket_Status'] == 'Open']
+        # FIX 1: Only draw the Matplotlib window if open tickets actually exist!
         if not d_o.empty:
+            fig, ax = plt.subplots(figsize=(8, 4.5))
             d_o['Age_B'] = pd.cut(d_o['Pipeline_Latency_Minutes'], bins=[-1,30,60,120,np.inf], labels=['Under 30m','30-60m','1-2 Hours','2h+'])
             d_o.pivot_table(index='SABRE_PCC', columns='Age_B', values='SABRE_PNR', aggfunc='count').fillna(0).astype(int).plot(kind='bar', stacked=True, cmap='Reds', ax=ax)
             plt.legend(title='Age')
-        ax.set_title('▼ ACTIVE SLA BACKLOG AGING BUCKETS BY OFFICE', fontsize=11, fontweight='bold')
-        st.pyplot(fig)
+            ax.set_title('▼ ACTIVE SLA BACKLOG AGING BUCKETS BY OFFICE', fontsize=11, fontweight='bold')
+            st.pyplot(fig)
+        else:
+            # Displays a professional corporate message instead of an empty blank graph box!
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            st.success("✅ **SLA CLEARANCE EXCELLENCE:** Zero Active Open Backlog Tickets Found for Current Filter Selection!")
         
     with row3_col2:
         fig, ax = plt.subplots(figsize=(8, 4.5))
@@ -300,22 +305,26 @@ else:
     # ─── ROW 4: ROOT-CAUSE PARETO FLANNELS & DENSITY OPERATIONAL HEATMAPS ───
     st.markdown("### ❖ Strategic Infrastructure Root-Causes")
     
-    fig, ax = plt.subplots(figsize=(16, 5))
     q_c = df['SABRE_QUEUE'].value_counts()
     if not q_c.empty:
+        fig, ax = plt.subplots(figsize=(16, 5))
         dp = pd.DataFrame({'Counts': q_c}); dp['Cum'] = (dp['Counts'].cumsum() / dp['Counts'].sum()) * 100
         sns.barplot(x=dp.index, y=dp['Counts'], palette='crest', ax=ax)
         ax_t = ax.twinx()
         sns.lineplot(x=dp.index, y=dp['Cum'], color='darkorange', marker='D', linewidth=2, ax=ax_t)
         ax_t.axhline(80, color='red', linestyle='--')
         ax_t.set_ylim(0, 105); ax_t.grid(False)
-    ax.set_title('❖ CRITICAL QUEUE PARETO BOTTLENECKS (80/20 ROOT CAUSE IMPACT RANK)', fontsize=11, fontweight='bold')
-    plt.xticks(rotation=45)
-    st.pyplot(fig)
+        ax.set_title('❖ CRITICAL QUEUE PARETO BOTTLENECKS (80/20 ROOT CAUSE IMPACT RANK)', fontsize=11, fontweight='bold')
+        # FIX 2: Ensure X-axis labels are cleanly spaced and rotated without clipping
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
+        st.pyplot(fig)
+    else:
+        st.info("ℹ️ No Queue folder distributions found across current matrix parameters.")
 
     fig, ax = plt.subplots(figsize=(16, 5))
     p_mat = df.pivot_table(index='Day_of_Week', columns='Hour', values='SABRE_PNR', aggfunc='count').reindex(d_ord).fillna(0)
     sns.heatmap(p_mat, cmap='YlOrRd', annot=True, fmt='.0f', cbar=True, linewidths=1.2, linecolor='white', ax=ax)
     ax.set_title('❖ CRITICAL OPERATIONAL BOTTLENECK HEATMAP MATRIX (DAY VS HOUR ARRIVAL DENSITY)', fontsize=11, fontweight='bold')
     st.pyplot(fig)
+
 
